@@ -1,0 +1,45 @@
+version: '3.3'
+
+services:
+  accounts_web:
+    build: ./accounts
+    command: bash -c "python ./accounts/manage.py runserver 0.0.0.0:8001"
+    volumes:
+      - .:/code
+    ports:
+      - 8001:8001
+    restart: always
+    depends_on:
+      - db
+    links:
+      - db
+    networks:
+      - webnet
+
+  db:
+    restart: always
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - webnet
+
+  nginx:
+    build: ./web
+    ports:
+      - 80:80
+    links:
+      - accounts_web
+    depends_on:
+      - accounts_web
+    networks:
+      - webnet
+
+volumes:
+  postgres_data:
+
+networks:
+  webnet:
